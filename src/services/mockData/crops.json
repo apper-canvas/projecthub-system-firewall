@@ -1,0 +1,57 @@
+[
+  {
+    "Id": 1,
+    "farmId": "1",
+    "name": "Tomatoes",
+    "variety": "Cherry Tomatoes",
+    "plantingDate": "2024-03-15T00:00:00Z",
+    "expectedHarvest": "2024-07-15T00:00:00Z",
+    "status": "Growing",
+    "area": 25,
+    "notes": "Planted in greenhouse section"
+  },
+  {
+    "Id": 2,
+    "farmId": "1",
+    "name": "Corn",
+    "variety": "Sweet Corn",
+    "plantingDate": "2024-04-01T00:00:00Z",
+    "expectedHarvest": "2024-08-15T00:00:00Z",
+    "status": "Seedling",
+    "area": 50,
+    "notes": "High yield variety"
+  },
+  {
+    "Id": 3,
+    "farmId": "2",
+    "name": "Apples",
+    "variety": "Gala",
+    "plantingDate": "2024-02-01T00:00:00Z",
+    "expectedHarvest": "2024-09-01T00:00:00Z",
+    "status": "Flowering",
+    "area": 30,
+    "notes": "Second year trees"
+  },
+  {
+    "Id": 4,
+    "farmId": "2",
+    "name": "Oranges",
+    "variety": "Valencia",
+    "plantingDate": "2024-01-15T00:00:00Z",
+    "expectedHarvest": "2024-12-01T00:00:00Z",
+    "status": "Mature",
+    "area": 45,
+    "notes": "Ready for harvest soon"
+  },
+  {
+    "Id": 5,
+    "farmId": "3",
+    "name": "Wheat",
+    "variety": "Hard Red Winter",
+    "plantingDate": "2024-03-20T00:00:00Z",
+    "expectedHarvest": "2024-08-20T00:00:00Z",
+    "status": "Growing",
+    "area": 100,
+    "notes": "Main cash crop"
+  }
+]

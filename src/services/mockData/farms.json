@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 1,
+    "name": "Green Valley Farm",
+    "size": 150,
+    "unit": "acres",
+    "location": "Valley Springs, CA",
+    "createdAt": "2024-01-15T08:00:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "Sunrise Orchards",
+    "size": 75,
+    "unit": "acres", 
+    "location": "Fresno, CA",
+    "createdAt": "2024-02-20T10:30:00Z"
+  },
+  {
+    "Id": 3,
+    "name": "Mountain View Ranch",
+    "size": 200,
+    "unit": "acres",
+    "location": "Bakersfield, CA",
+    "createdAt": "2024-03-10T14:15:00Z"
+  }
+]

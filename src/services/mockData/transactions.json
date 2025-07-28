@@ -1,0 +1,74 @@
+[
+  {
+    "Id": 1,
+    "farmId": "1",
+    "type": "expense",
+    "category": "Seeds",
+    "amount": 245.50,
+    "date": "2024-03-15T00:00:00Z",
+    "description": "Cherry tomato seeds for greenhouse"
+  },
+  {
+    "Id": 2,
+    "farmId": "1",
+    "type": "expense",
+    "category": "Fertilizer",
+    "amount": 180.00,
+    "date": "2024-04-02T00:00:00Z",
+    "description": "Organic fertilizer for corn field"
+  },
+  {
+    "Id": 3,
+    "farmId": "2",
+    "type": "income",
+    "category": "Fruit Sales",
+    "amount": 1250.00,
+    "date": "2024-11-15T00:00:00Z",
+    "description": "Apple harvest sales to local market"
+  },
+  {
+    "Id": 4,
+    "farmId": "2",
+    "type": "expense",
+    "category": "Equipment",
+    "amount": 420.00,
+    "date": "2024-03-10T00:00:00Z",
+    "description": "Pruning shears and ladder"
+  },
+  {
+    "Id": 5,
+    "farmId": "3",
+    "type": "expense",
+    "category": "Fuel",
+    "amount": 156.75,
+    "date": "2024-11-20T00:00:00Z",
+    "description": "Diesel fuel for tractor"
+  },
+  {
+    "Id": 6,
+    "farmId": "1",
+    "type": "income",
+    "category": "Vegetable Sales",
+    "amount": 680.25,
+    "date": "2024-11-25T00:00:00Z",
+    "description": "Fresh tomatoes to farmers market"
+  },
+  {
+    "Id": 7,
+    "farmId": "3",
+    "type": "expense",
+    "category": "Seeds",
+    "amount": 890.00,
+    "date": "2024-03-20T00:00:00Z",
+    "description": "Winter wheat seeds"
+  },
+  {
+    "Id": 8,
+    "farmId": "2",
+    "type": "expense",
+    "category": "Pest Control",
+    "amount": 95.50,
+    "date": "2024-10-15T00:00:00Z",
+    "description": "Organic pesticide spray"
+  }
+]
