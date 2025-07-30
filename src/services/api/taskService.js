@@ -1,67 +1,91 @@
-import tasksData from "@/services/mockData/tasks.json";
+import mockTasks from '@/services/mockData/tasks.json';
+import { toast } from 'react-toastify';
 
-class TaskService {
-  constructor() {
-    this.tasks = [...tasksData];
-  }
+let tasks = [...mockTasks];
+let nextId = Math.max(...tasks.map(task => task.Id)) + 1;
 
-  async getAll() {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return [...this.tasks];
-  }
+export const taskService = {
+getAll(projectId = null) {
+    if (projectId) {
+      return [...tasks].filter(task => task.projectId === projectId);
+    }
+    return [...tasks];
+  },
 
-  async getById(id) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return this.tasks.find(task => task.Id === id);
-  }
+  getById(id) {
+    const taskId = parseInt(id);
+    if (isNaN(taskId)) {
+      throw new Error('Invalid task ID');
+    }
+    return tasks.find(task => task.Id === taskId) || null;
+  },
 
-  async getByFarmId(farmId) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-    return this.tasks.filter(task => task.farmId === farmId.toString());
-  }
-
-  async create(taskData) {
-    await new Promise(resolve => setTimeout(resolve, 400));
+create(taskData) {
     const newTask = {
-      ...taskData,
-      Id: Math.max(...this.tasks.map(t => t.Id)) + 1,
-      farmId: taskData.farmId.toString(),
-      cropId: taskData.cropId?.toString() || null,
-      completed: false
+      Id: nextId++,
+      title: taskData.title || '',
+      description: taskData.description || '',
+      projectId: parseInt(taskData.projectId),
+      completed: false,
+      createdAt: new Date().toISOString()
     };
-    this.tasks.push(newTask);
+    
+    tasks.push(newTask);
+    toast.success('Task created successfully!');
     return { ...newTask };
-  }
+  },
 
-  async update(id, taskData) {
-    await new Promise(resolve => setTimeout(resolve, 350));
-    const index = this.tasks.findIndex(task => task.Id === id);
-    if (index !== -1) {
-      this.tasks[index] = { ...this.tasks[index], ...taskData };
-      return { ...this.tasks[index] };
+  update(id, taskData) {
+    const taskId = parseInt(id);
+    if (isNaN(taskId)) {
+      throw new Error('Invalid task ID');
     }
-    throw new Error("Task not found");
-  }
-
-  async delete(id) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-    const index = this.tasks.findIndex(task => task.Id === id);
-    if (index !== -1) {
-      const deletedTask = this.tasks.splice(index, 1)[0];
-      return { ...deletedTask };
+    
+    const index = tasks.findIndex(task => task.Id === taskId);
+    if (index === -1) {
+      throw new Error('Task not found');
     }
-    throw new Error("Task not found");
-  }
+    
+    tasks[index] = {
+      ...tasks[index],
+      ...taskData,
+      Id: taskId // Ensure ID cannot be changed
+    };
+    
+    toast.success('Task updated successfully!');
+    return { ...tasks[index] };
+  },
 
-  async toggleComplete(id) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const index = this.tasks.findIndex(task => task.Id === id);
-    if (index !== -1) {
-      this.tasks[index].completed = !this.tasks[index].completed;
-      return { ...this.tasks[index] };
+  delete(id) {
+    const taskId = parseInt(id);
+    if (isNaN(taskId)) {
+      throw new Error('Invalid task ID');
     }
-    throw new Error("Task not found");
-  }
-}
+    
+    const index = tasks.findIndex(task => task.Id === taskId);
+    if (index === -1) {
+      throw new Error('Task not found');
+    }
+    
+    const deletedTask = tasks.splice(index, 1)[0];
+    toast.success('Task deleted successfully!');
+    return deletedTask;
+  },
 
-export default new TaskService();
+  toggleComplete(id) {
+    const taskId = parseInt(id);
+    if (isNaN(taskId)) {
+      throw new Error('Invalid task ID');
+    }
+    
+    const task = tasks.find(task => task.Id === taskId);
+    if (!task) {
+      throw new Error('Task not found');
+    }
+    
+    task.completed = !task.completed;
+    const status = task.completed ? 'completed' : 'pending';
+    toast.success(`Task marked as ${status}!`);
+    return { ...task };
+  }
+};

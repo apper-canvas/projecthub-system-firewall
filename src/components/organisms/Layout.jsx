@@ -1,40 +1,36 @@
 import React, { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import { Outlet } from "react-router-dom";
+import Header from "@/components/organisms/Header";
+import Sidebar from "@/components/organisms/Sidebar";
 
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path === "/") return "Dashboard";
-    return path.slice(1).charAt(0).toUpperCase() + path.slice(2);
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(prev => !prev);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchValue(e.target.value);
+  const handleMobileMenuClose = () => {
+    setIsMobileMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+        isOpen={isMobileMenuOpen} 
+        onClose={handleMobileMenuClose}
       />
       
-      <div className="lg:ml-64">
-        <Header
-          title={getPageTitle()}
-          onMenuToggle={() => setSidebarOpen(true)}
-          searchValue={searchValue}
-          onSearchChange={handleSearchChange}
+      <div className="lg:pl-64">
+        <Header 
+          onMobileMenuToggle={handleMobileMenuToggle}
+          isMobileMenuOpen={isMobileMenuOpen}
         />
         
-        <main className="p-6">
-          <Outlet />
+        <main className="flex-1">
+          <div className="px-6 py-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

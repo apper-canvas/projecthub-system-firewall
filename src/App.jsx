@@ -3,24 +3,20 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import Layout from "@/components/organisms/Layout";
 import Dashboard from "@/components/pages/Dashboard";
-import Farms from "@/components/pages/Farms";
-import Crops from "@/components/pages/Crops";
+import Projects from "@/components/pages/Projects";
+import ProjectDetail from "@/components/pages/ProjectDetail";
 import Tasks from "@/components/pages/Tasks";
-import Weather from "@/components/pages/Weather";
-import Finances from "@/components/pages/Finances";
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-background">
+      <div className="App">
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="farms" element={<Farms />} />
-            <Route path="crops" element={<Crops />} />
+<Route index element={<Dashboard />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="tasks" element={<Tasks />} />
-            <Route path="weather" element={<Weather />} />
-            <Route path="finances" element={<Finances />} />
           </Route>
         </Routes>
         
@@ -35,6 +31,8 @@ function App() {
           draggable
           pauseOnHover
           theme="light"
+          className="z-[9999]"
+          toastClassName="text-sm"
         />
       </div>
     </BrowserRouter>

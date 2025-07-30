@@ -1,62 +1,26 @@
 [
   {
     "Id": 1,
-    "farmId": "1",
-    "cropId": "1",
-    "title": "Water tomato plants",
-    "dueDate": "2024-12-18T08:00:00Z",
-    "priority": "High",
-    "completed": false,
-    "notes": "Check soil moisture first"
+    "title": "Set up project repository",
+    "description": "Initialize the Git repository and set up the basic project structure",
+    "projectId": 1,
+    "completed": true,
+    "createdAt": "2024-01-15T10:00:00Z"
   },
   {
     "Id": 2,
-    "farmId": "1",
-    "cropId": "2",
-    "title": "Apply fertilizer to corn",
-    "dueDate": "2024-12-20T10:00:00Z",
-    "priority": "Medium",
+    "title": "Design user interface mockups",
+    "description": "Create wireframes and mockups for the main application screens",
+    "projectId": 1,
     "completed": false,
-    "notes": "Use nitrogen-rich fertilizer"
+    "createdAt": "2024-01-16T14:30:00Z"
   },
   {
     "Id": 3,
-    "farmId": "2",
-    "cropId": "3",
-    "title": "Prune apple trees",
-    "dueDate": "2024-12-19T09:00:00Z",
-    "priority": "Low",
-    "completed": true,
-    "notes": "Remove dead branches"
-  },
-  {
-    "Id": 4,
-    "farmId": "2",
-    "cropId": "4",
-    "title": "Harvest oranges",
-    "dueDate": "2024-12-22T07:00:00Z",
-    "priority": "High",
+    "title": "Implement authentication system",
+    "description": "Set up user login, registration, and session management",
+    "projectId": 2,
     "completed": false,
-    "notes": "Peak ripeness achieved"
-  },
-  {
-    "Id": 5,
-    "farmId": "3",
-    "cropId": "5",
-    "title": "Check wheat for pests",
-    "dueDate": "2024-12-21T11:00:00Z",
-    "priority": "Medium",
-    "completed": false,
-    "notes": "Look for aphids and rust"
-  },
-  {
-    "Id": 6,
-    "farmId": "1",
-    "cropId": "1",
-    "title": "Check greenhouse temperature",
-    "dueDate": "2024-12-17T06:00:00Z",
-    "priority": "High",
-    "completed": true,
-    "notes": "Maintain 65-75°F"
+    "createdAt": "2024-01-17T09:15:00Z"
   }
 ]

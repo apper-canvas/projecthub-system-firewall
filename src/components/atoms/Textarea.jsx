@@ -1,14 +1,14 @@
 import React, { forwardRef } from "react";
 import { cn } from "@/utils/cn";
 
-const Input = forwardRef(({ 
+const Textarea = forwardRef(({ 
   className, 
-  type = "text",
   label,
   error,
+  rows = 4,
   ...props 
 }, ref) => {
-  const baseStyles = "w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed";
+  const baseStyles = "w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed resize-vertical";
   
   return (
     <div className="space-y-2">
@@ -17,9 +17,9 @@ const Input = forwardRef(({
           {label}
         </label>
       )}
-      <input
+      <textarea
         ref={ref}
-        type={type}
+        rows={rows}
         className={cn(
           baseStyles,
           error && "border-red-300 focus:ring-red-500",
@@ -34,6 +34,6 @@ const Input = forwardRef(({
   );
 });
 
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";
 
-export default Input;
+export default Textarea;

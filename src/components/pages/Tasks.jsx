@@ -1,565 +1,368 @@
-import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import { format, isPast, isToday } from "date-fns";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import Select from "@/components/atoms/Select";
-import Badge from "@/components/atoms/Badge";
-import FormField from "@/components/molecules/FormField";
-import SearchBar from "@/components/molecules/SearchBar";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { taskService } from "@/services/api/taskService";
+import { projectService } from "@/services/api/projectService";
+import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
 import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import taskService from "@/services/api/taskService";
-import farmService from "@/services/api/farmService";
-import cropService from "@/services/api/cropService";
+import Projects from "@/components/pages/Projects";
+import Textarea from "@/components/atoms/Textarea";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
+import Card from "@/components/atoms/Card";
 
 const Tasks = () => {
+const [searchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
-  const [farms, setFarms] = useState([]);
-  const [crops, setCrops] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    farmId: "",
-    cropId: "",
-    title: "",
-    dueDate: "",
-    priority: "Medium",
-    notes: ""
+    title: '',
+    description: '',
+    projectId: ''
   });
-  const [formErrors, setFormErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+const [formErrors, setFormErrors] = useState({});
+  const [selectedProjectFilter, setSelectedProjectFilter] = useState('');
+useEffect(() => {
+    loadProjects();
+    loadTasks();
+  }, []);
 
-  const priorities = ["High", "Medium", "Low"];
+  useEffect(() => {
+    const projectId = searchParams.get('projectId');
+    if (projectId) {
+      setSelectedProjectFilter(projectId);
+    }
+  }, [searchParams]);
 
-  const loadData = async () => {
+const loadProjects = async () => {
+    try {
+      const data = await projectService.getAll();
+      setProjects(data);
+    } catch (err) {
+      console.error('Error loading projects:', err);
+    }
+  };
+
+const loadTasks = async () => {
     try {
       setLoading(true);
-      setError("");
-
-      const [tasksData, farmsData, cropsData] = await Promise.all([
-        taskService.getAll(),
-        farmService.getAll(),
-        cropService.getAll()
-      ]);
-
-      setTasks(tasksData);
-      setFarms(farmsData);
-      setCrops(cropsData);
+      setError(null);
+      const projectId = selectedProjectFilter || searchParams.get('projectId');
+      const data = await taskService.getAll(projectId ? parseInt(projectId) : null);
+      setTasks(data);
     } catch (err) {
-      setError("Failed to load tasks data. Please try again.");
-      console.error("Tasks loading error:", err);
+      setError('Failed to load tasks');
+      console.error('Error loading tasks:', err);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const getFarmName = (farmId) => {
-    const farm = farms.find(f => f.Id.toString() === farmId.toString());
-    return farm ? farm.name : "Unknown Farm";
-  };
-
-  const getCropName = (cropId) => {
-    if (!cropId) return "General Task";
-    const crop = crops.find(c => c.Id.toString() === cropId.toString());
-    return crop ? `${crop.name} (${crop.variety})` : "Unknown Crop";
-  };
-
-  const getFarmCrops = (farmId) => {
-    return crops.filter(crop => crop.farmId.toString() === farmId.toString());
-  };
-
-  const getPriorityVariant = (priority) => {
-    switch (priority.toLowerCase()) {
-      case "high": return "danger";
-      case "medium": return "warning";
-      case "low": return "info";
-      default: return "default";
-    }
-  };
-
-  const getTaskUrgency = (task) => {
-    const dueDate = new Date(task.dueDate);
-    if (task.completed) return "completed";
-    if (isPast(dueDate) && !isToday(dueDate)) return "overdue";
-    if (isToday(dueDate)) return "due-today";
-    return "upcoming";
-  };
-
-  const getUrgencyColor = (urgency) => {
-    switch (urgency) {
-      case "completed": return "text-green-600";
-      case "overdue": return "text-red-600";
-      case "due-today": return "text-orange-600";
-      default: return "text-gray-600";
-    }
-  };
-
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getFarmName(task.farmId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getCropName(task.cropId).toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = !statusFilter || 
-      (statusFilter === "completed" && task.completed) ||
-      (statusFilter === "pending" && !task.completed);
-    
-    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-
-  const sortedTasks = filteredTasks.sort((a, b) => {
-    // Sort by completion status first (incomplete first)
-    if (a.completed !== b.completed) {
-      return a.completed ? 1 : -1;
-    }
-    
-    // Then by due date
-    return new Date(a.dueDate) - new Date(b.dueDate);
-  });
-
-  const validateForm = () => {
-    const errors = {};
-
-    if (!formData.farmId) {
-      errors.farmId = "Please select a farm";
-    }
-
-    if (!formData.title.trim()) {
-      errors.title = "Task title is required";
-    }
-
-    if (!formData.dueDate) {
-      errors.dueDate = "Due date is required";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+const handleFormSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    // Validate form
+    const errors = {};
+    if (!formData.title.trim()) {
+      errors.title = 'Title is required';
+    }
+    if (!formData.projectId) {
+      errors.projectId = 'Project is required';
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
 
-    try {
-      setSubmitting(true);
-
-      const taskData = {
-        ...formData,
-        cropId: formData.cropId || null
-      };
-
-      if (editingTask) {
-        const updatedTask = await taskService.update(editingTask.Id, taskData);
-        setTasks(tasks.map(task => 
-          task.Id === editingTask.Id ? updatedTask : task
-        ));
-        toast.success("Task updated successfully!");
-      } else {
-        const newTask = await taskService.create(taskData);
-        setTasks([...tasks, newTask]);
-        toast.success("Task added successfully!");
-      }
-
-      handleCloseModal();
+try {
+      const newTask = await taskService.create(formData);
+      setTasks(prev => [...prev, newTask]);
+      setFormData({ title: '', description: '', projectId: '' });
+      setFormErrors({});
+      setShowForm(false);
     } catch (err) {
-      toast.error("Failed to save task. Please try again.");
-      console.error("Task save error:", err);
-    } finally {
-      setSubmitting(false);
+      console.error('Error creating task:', err);
+    }
+  };
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
-  const handleToggleComplete = async (task) => {
+const handleToggleComplete = async (taskId) => {
     try {
-      const updatedTask = await taskService.toggleComplete(task.Id);
-      setTasks(tasks.map(t => t.Id === task.Id ? updatedTask : t));
-      toast.success(updatedTask.completed ? "Task completed!" : "Task marked as pending");
+      const updatedTask = await taskService.toggleComplete(taskId);
+      setTasks(prev => prev.map(task => 
+        task.Id === taskId ? updatedTask : task
+      ));
     } catch (err) {
-      toast.error("Failed to update task status.");
-      console.error("Task toggle error:", err);
+      console.error('Error toggling task completion:', err);
     }
   };
 
-  const handleDelete = async (task) => {
-    if (!window.confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) {
       return;
     }
 
     try {
-      await taskService.delete(task.Id);
-      setTasks(tasks.filter(t => t.Id !== task.Id));
-      toast.success("Task deleted successfully!");
+      await taskService.delete(taskId);
+      setTasks(prev => prev.filter(task => task.Id !== taskId));
     } catch (err) {
-      toast.error("Failed to delete task. Please try again.");
-      console.error("Task delete error:", err);
+console.error('Error deleting task:', err);
     }
   };
 
-  const handleEdit = (task) => {
-    setEditingTask(task);
-    setFormData({
-      farmId: task.farmId,
-      cropId: task.cropId || "",
-      title: task.title,
-      dueDate: task.dueDate.split("T")[0] + "T" + task.dueDate.split("T")[1].substring(0, 5),
-      priority: task.priority,
-      notes: task.notes || ""
-    });
-    setFormErrors({});
-    setShowModal(true);
+  const handleProjectFilterChange = (projectId) => {
+    setSelectedProjectFilter(projectId);
+    loadTasks();
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingTask(null);
-    setFormData({
-      farmId: "",
-      cropId: "",
-      title: "",
-      dueDate: "",
-      priority: "Medium",
-      notes: ""
-    });
-    setFormErrors({});
+  // Filter tasks based on selected project
+  const filteredTasks = selectedProjectFilter 
+    ? tasks.filter(task => task.projectId === parseInt(selectedProjectFilter))
+    : tasks;
+
+  const completedTasks = filteredTasks.filter(task => task.completed);
+  const pendingTasks = filteredTasks.filter(task => !task.completed);
+
+  const getProjectName = (projectId) => {
+    const project = projects.find(p => p.Id === projectId);
+    return project ? project.title : 'Unknown Project';
   };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear cropId when farm changes
-    if (field === "farmId") {
-      setFormData(prev => ({
-        ...prev,
-        farmId: value,
-        cropId: ""
-      }));
-    }
-    
-    // Clear error when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ""
-      }));
-    }
-  };
-
-  if (loading) return <Loading />;
-  if (error) return <Error message={error} onRetry={loadData} />;
-
+if (loading) return <Loading />;
+  if (error) return <Error message={error} onRetry={loadTasks} />;
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
-          <p className="text-gray-600">Organize and track your farm tasks efficiently</p>
+          <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
+          <p className="text-gray-600 mt-1">
+            Manage your project tasks and to-dos
+          </p>
+{filteredTasks.length > 0 && (
+            <div className="flex gap-4 mt-3 text-sm text-gray-500">
+              <span>{pendingTasks.length} pending</span>
+              <span>{completedTasks.length} completed</span>
+              <span>{filteredTasks.length} total</span>
+            </div>
+          )}
+
+          {/* Project Filter */}
+          <div className="mt-4">
+            <label htmlFor="projectFilter" className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Project
+            </label>
+            <select
+              id="projectFilter"
+              value={selectedProjectFilter}
+              onChange={(e) => handleProjectFilterChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">All Projects</option>
+              {projects.map(project => (
+                <option key={project.Id} value={project.Id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <Button
+          onClick={() => setShowForm(!showForm)}
           variant="primary"
-          icon="Plus"
-          onClick={() => setShowModal(true)}
-          disabled={farms.length === 0}
+          className="flex items-center gap-2"
         >
+          <ApperIcon name="Plus" size={16} />
           Add Task
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
-          <SearchBar
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search tasks by title, farm, or crop..."
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="Filter by status"
-          >
-            <option value="">All Tasks</option>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-          </Select>
-          <Select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            placeholder="Filter by priority"
-          >
-            <option value="">All Priorities</option>
-            {priorities.map(priority => (
-              <option key={priority} value={priority}>{priority}</option>
-            ))}
-          </Select>
-        </div>
-      </div>
+{showForm && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1">
+                Project *
+              </label>
+              <select
+                id="projectId"
+                value={formData.projectId}
+                onChange={(e) => handleInputChange('projectId', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  formErrors.projectId ? 'border-red-300' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Select a project</option>
+                {projects.map(project => (
+                  <option key={project.Id} value={project.Id}>
+                    {project.title}
+                  </option>
+                ))}
+              </select>
+              {formErrors.projectId && (
+                <p className="text-red-600 text-sm mt-1">{formErrors.projectId}</p>
+              )}
+            </div>
 
-      {/* No Farms Warning */}
-      {farms.length === 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center space-x-3">
-            <ApperIcon name="AlertTriangle" size={20} className="text-yellow-600" />
-            <p className="text-yellow-800">
-              You need to add a farm before you can create tasks.
-            </p>
-          </div>
-        </div>
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                Title *
+              </label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder="Enter task title"
+                className={formErrors.title ? 'border-red-300' : ''}
+              />
+              {formErrors.title && (
+                <p className="text-red-600 text-sm mt-1">{formErrors.title}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Enter task description (optional)"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData({ title: '', description: '', projectId: '' });
+                  setFormErrors({});
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary">
+                Create Task
+              </Button>
+            </div>
+          </form>
+        </Card>
       )}
 
-      {/* Tasks List */}
-      {sortedTasks.length === 0 ? (
+{filteredTasks.length === 0 ? (
         <Empty
-          title={searchTerm || statusFilter || priorityFilter ? "No tasks found" : "No tasks yet"}
-          description={searchTerm || statusFilter || priorityFilter ? "Try adjusting your search or filter criteria" : "Create your first task to start organizing your farm work"}
-          action={(!searchTerm && !statusFilter && !priorityFilter && farms.length > 0) ? () => setShowModal(true) : undefined}
-          actionLabel="Add Task"
+          title="No tasks yet"
+          message="Create your first task to get started with managing your to-dos."
           icon="CheckSquare"
+          actionLabel="Add Task"
+          onAction={() => setShowForm(true)}
         />
       ) : (
         <div className="space-y-4">
-          {sortedTasks.map((task) => {
-            const urgency = getTaskUrgency(task);
-            return (
-              <div
-                key={task.Id}
-                className={`card ${task.completed ? 'opacity-60' : ''} ${urgency === 'overdue' ? 'border-l-4 border-red-500' : urgency === 'due-today' ? 'border-l-4 border-orange-500' : ''}`}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <button
-                      onClick={() => handleToggleComplete(task)}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                        task.completed
-                          ? 'bg-green-500 border-green-500'
-                          : 'border-gray-300 hover:border-primary-500'
-                      }`}
-                    >
-                      {task.completed && (
-                        <ApperIcon name="Check" size={14} className="text-white" />
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                          {task.title}
-                        </h3>
-                        
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <ApperIcon name="MapPin" size={14} />
-                            <span>{getFarmName(task.farmId)}</span>
-                          </div>
-                          
-                          {task.cropId && (
-                            <div className="flex items-center space-x-1">
-                              <ApperIcon name="Wheat" size={14} />
-                              <span>{getCropName(task.cropId)}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {task.notes && (
-                          <p className="text-sm text-gray-600 mt-2">{task.notes}</p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center space-x-3 ml-4">
-                        <div className="text-right">
-                          <div className={`text-sm font-medium ${getUrgencyColor(urgency)}`}>
-                            {format(new Date(task.dueDate), "MMM d, h:mm a")}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {urgency === "overdue" && "Overdue"}
-                            {urgency === "due-today" && "Due Today"}
-                            {urgency === "upcoming" && "Upcoming"}
-                            {urgency === "completed" && "Completed"}
-                          </div>
-                        </div>
-
-                        <Badge variant={getPriorityVariant(task.priority)} size="sm">
-                          {task.priority}
-                        </Badge>
-
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon="Edit"
-                            onClick={() => handleEdit(task)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon="Trash2"
-                            onClick={() => handleDelete(task)}
-                            className="text-red-600 hover:bg-red-50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={handleCloseModal}
-          />
-          
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
-                  {editingTask ? "Edit Task" : "Add New Task"}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon="X"
-                  onClick={handleCloseModal}
-                />
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <FormField
-                  label="Farm"
-                  required
-                  error={formErrors.farmId}
-                >
-                  <Select
-                    value={formData.farmId}
-                    onChange={(e) => handleInputChange("farmId", e.target.value)}
-                    placeholder="Select a farm"
-                    error={formErrors.farmId}
-                  >
-                    {farms.map(farm => (
-                      <option key={farm.Id} value={farm.Id}>
-                        {farm.name} ({farm.size} {farm.unit})
-                      </option>
-                    ))}
-                  </Select>
-                </FormField>
-
-                <FormField label="Related Crop (Optional)">
-                  <Select
-                    value={formData.cropId}
-                    onChange={(e) => handleInputChange("cropId", e.target.value)}
-                    placeholder="Select a crop (optional)"
-                    disabled={!formData.farmId}
-                  >
-                    <option value="">General Task</option>
-                    {formData.farmId && getFarmCrops(formData.farmId).map(crop => (
-                      <option key={crop.Id} value={crop.Id}>
-                        {crop.name} ({crop.variety})
-                      </option>
-                    ))}
-                  </Select>
-                  {!formData.farmId && (
-                    <p className="text-xs text-gray-500 mt-1">Select a farm first to see crops</p>
-                  )}
-                </FormField>
-
-                <FormField
-                  label="Task Title"
-                  required
-                  error={formErrors.title}
-                >
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
-                    placeholder="e.g., Water tomato plants"
-                    error={formErrors.title}
+          {pendingTasks.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                Pending Tasks ({pendingTasks.length})
+              </h2>
+              <div className="space-y-3">
+{pendingTasks.map(task => (
+                  <TaskCard
+                    key={task.Id}
+                    task={task}
+                    projectName={getProjectName(task.projectId)}
+                    onToggleComplete={handleToggleComplete}
+                    onDelete={handleDeleteTask}
                   />
-                </FormField>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    label="Due Date & Time"
-                    required
-                    error={formErrors.dueDate}
-                  >
-                    <Input
-                      type="datetime-local"
-                      value={formData.dueDate}
-                      onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                      error={formErrors.dueDate}
-                    />
-                  </FormField>
-
-                  <FormField label="Priority">
-                    <Select
-                      value={formData.priority}
-                      onChange={(e) => handleInputChange("priority", e.target.value)}
-                    >
-                      {priorities.map(priority => (
-                        <option key={priority} value={priority}>{priority}</option>
-                      ))}
-                    </Select>
-                  </FormField>
-                </div>
-
-                <FormField label="Notes">
-                  <Input
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                    placeholder="Optional notes about this task"
-                  />
-                </FormField>
-
-                <div className="flex items-center justify-end space-x-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCloseModal}
-                    disabled={submitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={submitting}
-                    icon={submitting ? "Loader2" : editingTask ? "Save" : "Plus"}
-                  >
-                    {submitting ? "Saving..." : editingTask ? "Update Task" : "Add Task"}
-                  </Button>
-                </div>
-              </form>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {completedTasks.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                Completed Tasks ({completedTasks.length})
+              </h2>
+              <div className="space-y-3">
+                {completedTasks.map(task => (
+<TaskCard
+                    key={task.Id}
+                    task={task}
+                    projectName={getProjectName(task.projectId)}
+                    onToggleComplete={handleToggleComplete}
+                    onDelete={handleDeleteTask}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
+  );
+};
+
+const TaskCard = ({ task, projectName, onToggleComplete, onDelete }) => {
+  return (
+    <Card className={`p-4 transition-all duration-200 ${task.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+      <div className="flex items-start gap-3">
+        <button
+          onClick={() => onToggleComplete(task.Id)}
+          className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+            task.completed
+              ? 'bg-emerald-500 border-emerald-500 text-white'
+              : 'border-gray-300 hover:border-emerald-500'
+          }`}
+        >
+          {task.completed && <ApperIcon name="Check" size={12} />}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className={`font-medium ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+              {task.title}
+            </h3>
+            {projectName && (
+              <span className="px-2 py-1 text-xs bg-primary-100 text-primary-700 rounded-full">
+                {projectName}
+              </span>
+            )}
+          </div>
+          {task.description && (
+            <p className={`text-sm mt-1 ${task.completed ? 'text-gray-400' : 'text-gray-600'}`}>
+              {task.description}
+            </p>
+          )}
+          <p className="text-xs text-gray-400 mt-2">
+            Created {format(new Date(task.createdAt), 'MMM d, yyyy')}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(task.Id)}
+            className="text-gray-400 hover:text-red-600"
+          >
+            <ApperIcon name="Trash2" size={16} />
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 };
 
