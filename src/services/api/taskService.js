@@ -1,91 +1,319 @@
-import mockTasks from '@/services/mockData/tasks.json';
 import { toast } from 'react-toastify';
 
-let tasks = [...mockTasks];
-let nextId = Math.max(...tasks.map(task => task.Id)) + 1;
-
-export const taskService = {
-getAll(projectId = null) {
-    if (projectId) {
-      return [...tasks].filter(task => task.projectId === projectId);
-    }
-    return [...tasks];
-  },
-
-  getById(id) {
-    const taskId = parseInt(id);
-    if (isNaN(taskId)) {
-      throw new Error('Invalid task ID');
-    }
-    return tasks.find(task => task.Id === taskId) || null;
-  },
-
-create(taskData) {
-    const newTask = {
-      Id: nextId++,
-      title: taskData.title || '',
-      description: taskData.description || '',
-      projectId: parseInt(taskData.projectId),
-      completed: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    tasks.push(newTask);
-    toast.success('Task created successfully!');
-    return { ...newTask };
-  },
-
-  update(id, taskData) {
-    const taskId = parseInt(id);
-    if (isNaN(taskId)) {
-      throw new Error('Invalid task ID');
-    }
-    
-    const index = tasks.findIndex(task => task.Id === taskId);
-    if (index === -1) {
-      throw new Error('Task not found');
-    }
-    
-    tasks[index] = {
-      ...tasks[index],
-      ...taskData,
-      Id: taskId // Ensure ID cannot be changed
-    };
-    
-    toast.success('Task updated successfully!');
-    return { ...tasks[index] };
-  },
-
-  delete(id) {
-    const taskId = parseInt(id);
-    if (isNaN(taskId)) {
-      throw new Error('Invalid task ID');
-    }
-    
-    const index = tasks.findIndex(task => task.Id === taskId);
-    if (index === -1) {
-      throw new Error('Task not found');
-    }
-    
-    const deletedTask = tasks.splice(index, 1)[0];
-    toast.success('Task deleted successfully!');
-    return deletedTask;
-  },
-
-  toggleComplete(id) {
-    const taskId = parseInt(id);
-    if (isNaN(taskId)) {
-      throw new Error('Invalid task ID');
-    }
-    
-    const task = tasks.find(task => task.Id === taskId);
-    if (!task) {
-      throw new Error('Task not found');
-    }
-    
-    task.completed = !task.completed;
-    const status = task.completed ? 'completed' : 'pending';
-    toast.success(`Task marked as ${status}!`);
-    return { ...task };
+class TaskService {
+  constructor() {
+    // Initialize ApperClient with Project ID and Public Key
+    const { ApperClient } = window.ApperSDK;
+    this.apperClient = new ApperClient({
+      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+    });
+    this.tableName = 'task_c';
   }
-};
+
+  async getAll(projectId = null) {
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Id" } },
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "title_c" } },
+          { field: { Name: "description_c" } },
+          { field: { Name: "projectId_c" } },
+          { field: { Name: "completed_c" } },
+          { field: { Name: "createdAt_c" } }
+        ],
+        pagingInfo: {
+          limit: 100,
+          offset: 0
+        }
+      };
+
+      // Add project filter if specified
+      if (projectId) {
+        params.where = [
+          {
+            FieldName: "projectId_c",
+            Operator: "EqualTo",
+            Values: [projectId.toString()]
+          }
+        ];
+      }
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      // Handle empty results
+      if (!response.data || response.data.length === 0) {
+        return [];
+      }
+
+      // Map database field names to UI field names for backward compatibility
+      return response.data.map(task => ({
+        ...task,
+        title: task.title_c || task.Name || '',
+        description: task.description_c || '',
+        projectId: task.projectId_c?.Id || task.projectId_c,
+        completed: task.completed_c || false,
+        createdAt: task.createdAt_c || task.CreatedOn
+      }));
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching tasks:", error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      return [];
+    }
+  }
+
+  async getById(id) {
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Id" } },
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "title_c" } },
+          { field: { Name: "description_c" } },
+          { field: { Name: "projectId_c" } },
+          { field: { Name: "completed_c" } },
+          { field: { Name: "createdAt_c" } }
+        ]
+      };
+
+      const response = await this.apperClient.getRecordById(this.tableName, parseInt(id), params);
+
+      if (!response || !response.data) {
+        return null;
+      }
+
+      // Map database field names to UI field names for backward compatibility
+      const task = response.data;
+      return {
+        ...task,
+        title: task.title_c || task.Name || '',
+        description: task.description_c || '',
+        projectId: task.projectId_c?.Id || task.projectId_c,
+        completed: task.completed_c || false,
+        createdAt: task.createdAt_c || task.CreatedOn
+      };
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error(`Error fetching task with ID ${id}:`, error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      return null;
+    }
+  }
+
+  async create(taskData) {
+    try {
+      // Only include Updateable fields in create operation
+      const params = {
+        records: [
+          {
+            Name: taskData.title || '',
+            Tags: taskData.tags || '',
+            title_c: taskData.title || '',
+            description_c: taskData.description || '',
+            projectId_c: parseInt(taskData.projectId), // Send as integer ID for lookup field
+            completed_c: false,
+            createdAt_c: new Date().toISOString()
+          }
+        ]
+      };
+
+      const response = await this.apperClient.createRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create task ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              toast.error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) toast.error(record.message);
+          });
+          throw new Error("Failed to create task");
+        }
+
+        const successfulRecord = response.results.find(result => result.success);
+        if (successfulRecord) {
+          const task = successfulRecord.data;
+          toast.success('Task created successfully!');
+          return {
+            ...task,
+            title: task.title_c || task.Name || '',
+            description: task.description_c || '',
+            projectId: task.projectId_c?.Id || task.projectId_c,
+            completed: task.completed_c || false,
+            createdAt: task.createdAt_c || task.CreatedOn
+          };
+        }
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error creating task:", error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      throw error;
+    }
+  }
+
+  async update(id, taskData) {
+    try {
+      const updateData = {
+        Id: parseInt(id)
+      };
+
+      // Only include fields that are being updated
+      if (taskData.title !== undefined) {
+        updateData.Name = taskData.title;
+        updateData.title_c = taskData.title;
+      }
+      if (taskData.description !== undefined) {
+        updateData.description_c = taskData.description;
+      }
+      if (taskData.projectId !== undefined) {
+        updateData.projectId_c = parseInt(taskData.projectId);
+      }
+      if (taskData.completed !== undefined) {
+        updateData.completed_c = taskData.completed;
+      }
+
+      const params = {
+        records: [updateData]
+      };
+
+      const response = await this.apperClient.updateRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to update task ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              toast.error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) toast.error(record.message);
+          });
+          throw new Error("Failed to update task");
+        }
+
+        const successfulRecord = response.results.find(result => result.success);
+        if (successfulRecord) {
+          const task = successfulRecord.data;
+          toast.success('Task updated successfully!');
+          return {
+            ...task,
+            title: task.title_c || task.Name || '',
+            description: task.description_c || '',
+            projectId: task.projectId_c?.Id || task.projectId_c,
+            completed: task.completed_c || false,
+            createdAt: task.createdAt_c || task.CreatedOn
+          };
+        }
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error updating task:", error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      throw error;
+    }
+  }
+
+  async delete(id) {
+    try {
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await this.apperClient.deleteRecord(this.tableName, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return false;
+      }
+
+      if (response.results) {
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to delete task ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          
+          failedRecords.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+          return false;
+        }
+        
+        toast.success('Task deleted successfully!');
+        return true;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error deleting task:", error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      return false;
+    }
+  }
+
+  async toggleComplete(id) {
+    try {
+      // First get current task state to toggle
+      const currentTask = await this.getById(id);
+      if (!currentTask) {
+        throw new Error('Task not found');
+      }
+
+      const newCompletedState = !currentTask.completed;
+      const updatedTask = await this.update(id, { completed: newCompletedState });
+      
+      const status = newCompletedState ? 'completed' : 'pending';
+      toast.success(`Task marked as ${status}!`);
+      return updatedTask;
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error toggling task completion:", error?.response?.data?.message);
+      } else {
+        console.error(error.message);
+      }
+      throw error;
+    }
+  }
+}
+
+export const taskService = new TaskService();

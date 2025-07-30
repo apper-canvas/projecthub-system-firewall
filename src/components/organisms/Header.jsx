@@ -1,10 +1,23 @@
-import React from "react";
+import React, { useContext } from "react";
+import { useSelector } from 'react-redux';
 import ApperIcon from "@/components/ApperIcon";
 import MobileMenuButton from "@/components/molecules/MobileMenuButton";
-
+import Button from "@/components/atoms/Button"; 
+import { AuthContext } from "@/App";
 const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
+  const { logout } = useContext(AuthContext);
+  const { user, isAuthenticated } = useSelector((state) => state.user);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between lg:justify-start">
+    <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center space-x-4">
         <MobileMenuButton 
           isOpen={isMobileMenuOpen}
@@ -19,9 +32,8 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
           </h1>
         </div>
       </div>
-      
-      <div className="hidden lg:flex items-center space-x-4">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+<div className="flex items-center space-x-4">
+        <div className="hidden lg:flex items-center space-x-2 text-sm text-gray-600">
           <ApperIcon name="Clock" className="w-4 h-4" />
           <span>{new Date().toLocaleDateString("en-US", { 
             weekday: "long", 
@@ -30,6 +42,26 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
             day: "numeric" 
           })}</span>
         </div>
+        
+        {isAuthenticated && (
+          <div className="flex items-center space-x-3">
+            {user && (
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
+                <ApperIcon name="User" className="w-4 h-4" />
+                <span>{user.firstName} {user.lastName}</span>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center space-x-2"
+            >
+              <ApperIcon name="LogOut" className="w-4 h-4" />
+              <span>Logout</span>
+            </Button>
+          </div>
+        )}
       </div>
     </header>
   );
