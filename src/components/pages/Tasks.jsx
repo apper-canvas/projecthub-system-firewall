@@ -434,15 +434,13 @@ const TaskCard = ({ task, projectName, onToggleComplete, onDelete, onCommentUpda
                 {projectName}
               </span>
             )}
-            {task.commentCount > 0 && (
-              <button 
-                onClick={handleToggleExpanded}
-                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full flex items-center gap-1 hover:bg-gray-200 transition-colors"
-              >
-                <ApperIcon name="MessageSquare" size={10} />
-                {task.commentCount}
-              </button>
-            )}
+<button 
+              onClick={handleToggleExpanded}
+              className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full flex items-center gap-1 hover:bg-gray-200 transition-colors"
+            >
+              <ApperIcon name="MessageSquare" size={10} />
+              {task.commentCount > 0 ? task.commentCount : 'Add Comment'}
+            </button>
           </div>
           {task.description && (
             <p className={`text-sm mt-1 ${task.completed ? 'text-gray-400' : 'text-gray-600'}`}>
