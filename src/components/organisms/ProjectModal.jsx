@@ -6,26 +6,26 @@ import ApperIcon from "@/components/ApperIcon";
 import { cn } from "@/utils/cn";
 
 const ProjectModal = ({ isOpen, onClose, onSave, project = null, title = "Create New Project" }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "not-started"
+    status: "active"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
+useEffect(() => {
     if (project) {
       setFormData({
         title: project.title || "",
         description: project.description || "",
-        status: project.status || "not-started"
+        status: project.status || "active"
       });
     } else {
       setFormData({
         title: "",
         description: "",
-        status: "not-started"
+        status: "active"
       });
     }
     setErrors({});
@@ -99,7 +99,7 @@ const ProjectModal = ({ isOpen, onClose, onSave, project = null, title = "Create
             disabled={isSubmitting}
           />
 
-          <div className="space-y-2">
+<div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Status
             </label>
@@ -109,10 +109,10 @@ const ProjectModal = ({ isOpen, onClose, onSave, project = null, title = "Create
               disabled={isSubmitting}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
             >
-              <option value="not-started">Not Started</option>
               <option value="active">Active</option>
               <option value="on-hold">On Hold</option>
               <option value="completed">Completed</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 

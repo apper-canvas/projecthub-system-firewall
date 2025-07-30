@@ -5,14 +5,16 @@ import ApperIcon from "@/components/ApperIcon";
 import { format } from "date-fns";
 
 const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
-  const getStatusVariant = (status) => {
+const getStatusVariant = (status) => {
     switch (status) {
       case "active":
-        return "primary";
+        return "success"; // Green for Active
       case "completed":
-        return "success";
+        return "primary"; // Blue for Completed
       case "on-hold":
-        return "warning";
+        return "warning"; // Yellow for On Hold
+      case "archived":
+        return "default"; // Gray for Archived
       default:
         return "default";
     }
@@ -26,8 +28,10 @@ const ProjectCard = ({ project, onEdit, onDelete, onClick }) => {
         return "Completed";
       case "on-hold":
         return "On Hold";
+      case "archived":
+        return "Archived";
       default:
-        return "Not Started";
+        return "Unknown";
     }
   };
 

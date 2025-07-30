@@ -10,11 +10,12 @@ import ApperIcon from "@/components/ApperIcon";
 import { projectService } from "@/services/api/projectService";
 import { toast } from "react-toastify";
 const Projects = () => {
-  const [projects, setProjects] = useState([]);
+const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const loadProjects = async () => {
     setLoading(true);
@@ -80,8 +81,14 @@ const handleViewTasks = (projectId) => {
 
   if (loading) return <Loading type="projects" />;
   if (error) return <Error message={error} onRetry={loadProjects} />;
+const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+  };
 
-  return (
+  const filteredProjects = statusFilter === "all" 
+    ? projects 
+    : projects.filter(project => project.status === statusFilter);
+return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -96,6 +103,49 @@ const handleViewTasks = (projectId) => {
         </Button>
       </div>
 
+      {/* Status Filter Buttons */}
+      <div className="flex flex-wrap gap-3 p-4 bg-white rounded-lg border border-gray-200">
+        <Button
+          onClick={() => handleStatusFilter("all")}
+          variant={statusFilter === "all" ? "primary" : "ghost"}
+          size="sm"
+        >
+          All Projects
+        </Button>
+        <Button
+          onClick={() => handleStatusFilter("active")}
+          variant={statusFilter === "active" ? "primary" : "ghost"}
+          size="sm"
+        >
+          <ApperIcon name="Play" className="w-4 h-4 mr-1" />
+          Active
+        </Button>
+        <Button
+          onClick={() => handleStatusFilter("on-hold")}
+          variant={statusFilter === "on-hold" ? "primary" : "ghost"}
+          size="sm"
+        >
+          <ApperIcon name="Pause" className="w-4 h-4 mr-1" />
+          On Hold
+        </Button>
+        <Button
+          onClick={() => handleStatusFilter("completed")}
+          variant={statusFilter === "completed" ? "primary" : "ghost"}
+          size="sm"
+        >
+          <ApperIcon name="CheckCircle" className="w-4 h-4 mr-1" />
+          Completed
+        </Button>
+        <Button
+          onClick={() => handleStatusFilter("archived")}
+          variant={statusFilter === "archived" ? "primary" : "ghost"}
+          size="sm"
+        >
+          <ApperIcon name="Archive" className="w-4 h-4 mr-1" />
+          Archived
+        </Button>
+      </div>
+
       {projects.length === 0 ? (
         <Empty
           title="No projects yet"
@@ -106,7 +156,7 @@ const handleViewTasks = (projectId) => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
+{filteredProjects.map((project) => (
 <ProjectCard
           key={project.Id}
           project={project}
