@@ -14,7 +14,7 @@ class TaskService {
   async getAll(projectId = null) {
     try {
       const params = {
-        fields: [
+fields: [
           { field: { Name: "Id" } },
           { field: { Name: "Name" } },
           { field: { Name: "Tags" } },
@@ -23,7 +23,8 @@ class TaskService {
           { field: { Name: "description_c" } },
           { field: { Name: "projectId_c" } },
           { field: { Name: "completed_c" } },
-          { field: { Name: "createdAt_c" } }
+          { field: { Name: "createdAt_c" } },
+          { field: { Name: "commentCount_c" } }
         ],
         pagingInfo: {
           limit: 100,
@@ -61,8 +62,9 @@ class TaskService {
         title: task.title_c || task.Name || '',
         description: task.description_c || '',
         projectId: task.projectId_c?.Id || task.projectId_c,
-        completed: task.completed_c || false,
-        createdAt: task.createdAt_c || task.CreatedOn
+completed: task.completed_c || false,
+        createdAt: task.createdAt_c || task.CreatedOn,
+        commentCount: task.commentCount_c || 0
       }));
     } catch (error) {
       if (error?.response?.data?.message) {
@@ -76,7 +78,7 @@ class TaskService {
 
   async getById(id) {
     try {
-      const params = {
+const params = {
         fields: [
           { field: { Name: "Id" } },
           { field: { Name: "Name" } },
@@ -86,7 +88,8 @@ class TaskService {
           { field: { Name: "description_c" } },
           { field: { Name: "projectId_c" } },
           { field: { Name: "completed_c" } },
-          { field: { Name: "createdAt_c" } }
+          { field: { Name: "createdAt_c" } },
+          { field: { Name: "commentCount_c" } }
         ]
       };
 
@@ -103,8 +106,9 @@ class TaskService {
         title: task.title_c || task.Name || '',
         description: task.description_c || '',
         projectId: task.projectId_c?.Id || task.projectId_c,
-        completed: task.completed_c || false,
-        createdAt: task.createdAt_c || task.CreatedOn
+completed: task.completed_c || false,
+        createdAt: task.createdAt_c || task.CreatedOn,
+        commentCount: task.commentCount_c || 0
       };
     } catch (error) {
       if (error?.response?.data?.message) {

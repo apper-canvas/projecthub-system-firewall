@@ -317,7 +317,7 @@ if (loading) return <Loading />;
 
 const TaskCard = ({ task, projectName, onToggleComplete, onDelete }) => {
   return (
-    <Card className={`p-4 transition-all duration-200 ${task.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
+<Card className={`p-4 transition-all duration-200 ${task.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
       <div className="flex items-start gap-3">
         <button
           onClick={() => onToggleComplete(task.Id)}
@@ -338,6 +338,12 @@ const TaskCard = ({ task, projectName, onToggleComplete, onDelete }) => {
             {projectName && (
               <span className="px-2 py-1 text-xs bg-primary-100 text-primary-700 rounded-full">
                 {projectName}
+              </span>
+            )}
+            {task.commentCount > 0 && (
+              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full flex items-center gap-1">
+                <ApperIcon name="MessageSquare" size={10} />
+                {task.commentCount}
               </span>
             )}
           </div>
