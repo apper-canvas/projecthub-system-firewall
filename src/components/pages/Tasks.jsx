@@ -13,6 +13,7 @@ import Textarea from "@/components/atoms/Textarea";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
 import Card from "@/components/atoms/Card";
+import TaskModal from "@/components/organisms/TaskModal";
 
 const Tasks = () => {
 const [searchParams] = useSearchParams();
@@ -20,15 +21,7 @@ const [searchParams] = useSearchParams();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    projectId: '',
-    status: 'to-do',
-    dueDate: ''
-  });
-const [formErrors, setFormErrors] = useState({});
+const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedProjectFilter, setSelectedProjectFilter] = useState('');
 useEffect(() => {
     loadProjects();
@@ -65,37 +58,12 @@ const loadTasks = async () => {
       setLoading(false);
     }
   };
-const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    const errors = {};
-    if (!formData.title.trim()) {
-      errors.title = 'Title is required';
-    }
-    if (!formData.projectId) {
-      errors.projectId = 'Project is required';
-    }
-    
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-try {
-      const newTask = await taskService.create(formData);
+const handleCreateTask = async (taskData) => {
+    try {
+      const newTask = await taskService.create(taskData);
       setTasks(prev => [...prev, newTask]);
-setFormData({ title: '', description: '', projectId: '', status: 'to-do', dueDate: '' });
-      setFormErrors({});
-      setShowForm(false);
     } catch (err) {
       console.error('Error creating task:', err);
-    }
-  };
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -178,8 +146,8 @@ if (loading) return <Loading />;
             </select>
           </div>
         </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
+<Button
+          onClick={() => setShowTaskModal(true)}
           variant="primary"
           className="flex items-center gap-2"
         >
@@ -188,112 +156,13 @@ if (loading) return <Loading />;
         </Button>
       </div>
 
-{showForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
-<form onSubmit={handleFormSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1">
-                Project *
-              </label>
-              <select
-                id="projectId"
-                value={formData.projectId}
-                onChange={(e) => handleInputChange('projectId', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                  formErrors.projectId ? 'border-red-300' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Select a project</option>
-                {projects.map(project => (
-                  <option key={project.Id} value={project.Id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
-              {formErrors.projectId && (
-                <p className="text-red-600 text-sm mt-1">{formErrors.projectId}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                Title *
-              </label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter task title"
-                className={formErrors.title ? 'border-red-300' : ''}
-              />
-              {formErrors.title && (
-                <p className="text-red-600 text-sm mt-1">{formErrors.title}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Enter task description (optional)"
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Status *
-              </label>
-              <select
-                id="status"
-                value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="to-do">To Do</option>
-                <option value="in-progress">In Progress</option>
-                <option value="blocked">Blocked</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date
-              </label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                className=""
-              />
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData({ title: '', description: '', projectId: '' });
-                  setFormErrors({});
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary">
-                Create Task
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
+<TaskModal
+        isOpen={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onSave={handleCreateTask}
+        projects={projects}
+        title="Create New Task"
+      />
 
 {filteredTasks.length === 0 ? (
         <Empty
@@ -301,7 +170,7 @@ if (loading) return <Loading />;
           message="Create your first task to get started with managing your to-dos."
           icon="CheckSquare"
           actionLabel="Add Task"
-          onAction={() => setShowForm(true)}
+          onAction={() => setShowTaskModal(true)}
         />
       ) : (
         <div className="space-y-4">
