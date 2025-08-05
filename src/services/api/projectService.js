@@ -11,7 +11,7 @@ class ProjectService {
     this.tableName = 'project_c';
   }
 
-  async getAll() {
+async getAll() {
     try {
       const params = {
         fields: [
@@ -22,6 +22,13 @@ class ProjectService {
           { field: { Name: "title_c" } },
           { field: { Name: "description_c" } },
           { field: { Name: "status_c" } },
+          { field: { Name: "priority_c" } },
+          { field: { Name: "startDate_c" } },
+          { field: { Name: "endDate_c" } },
+          { field: { Name: "projectOwner_c" } },
+          { field: { Name: "manager_c" } },
+          { field: { Name: "progress_c" } },
+          { field: { Name: "phase_c" } },
           { field: { Name: "createdAt_c" } },
           { field: { Name: "updatedAt_c" } }
         ],
@@ -55,7 +62,15 @@ class ProjectService {
         ...project,
         title: project.title_c || project.Name || '',
         description: project.description_c || '',
-        status: project.status_c || 'not-started',
+        status: project.status_c || 'active',
+        priority: project.priority_c || 'Medium',
+        startDate: project.startDate_c || '',
+        endDate: project.endDate_c || '',
+        projectOwner: project.projectOwner_c?.Name || '',
+        manager: project.manager_c?.Name || '',
+        progress: project.progress_c || 0,
+        phase: project.phase_c || 'Initiation',
+        tags: project.Tags || '',
         createdAt: project.createdAt_c || project.CreatedOn,
         updatedAt: project.updatedAt_c || project.ModifiedOn
       }));
@@ -69,7 +84,7 @@ class ProjectService {
     }
   }
 
-  async getById(id) {
+async getById(id) {
     try {
       const params = {
         fields: [
@@ -80,6 +95,13 @@ class ProjectService {
           { field: { Name: "title_c" } },
           { field: { Name: "description_c" } },
           { field: { Name: "status_c" } },
+          { field: { Name: "priority_c" } },
+          { field: { Name: "startDate_c" } },
+          { field: { Name: "endDate_c" } },
+          { field: { Name: "projectOwner_c" } },
+          { field: { Name: "manager_c" } },
+          { field: { Name: "progress_c" } },
+          { field: { Name: "phase_c" } },
           { field: { Name: "createdAt_c" } },
           { field: { Name: "updatedAt_c" } }
         ]
@@ -97,7 +119,15 @@ class ProjectService {
         ...project,
         title: project.title_c || project.Name || '',
         description: project.description_c || '',
-        status: project.status_c || 'not-started',
+        status: project.status_c || 'active',
+        priority: project.priority_c || 'Medium',
+        startDate: project.startDate_c || '',
+        endDate: project.endDate_c || '',
+        projectOwner: project.projectOwner_c?.Name || '',
+        manager: project.manager_c?.Name || '',
+        progress: project.progress_c || 0,
+        phase: project.phase_c || 'Initiation',
+        tags: project.Tags || '',
         createdAt: project.createdAt_c || project.CreatedOn,
         updatedAt: project.updatedAt_c || project.ModifiedOn
       };
@@ -111,7 +141,7 @@ class ProjectService {
     }
   }
 
-  async create(projectData) {
+async create(projectData) {
     try {
       // Only include Updateable fields in create operation
       const params = {
@@ -121,7 +151,14 @@ class ProjectService {
             Tags: projectData.tags || '',
             title_c: projectData.title || '',
             description_c: projectData.description || '',
-            status_c: projectData.status || 'not-started',
+            status_c: projectData.status || 'active',
+            priority_c: projectData.priority || 'Medium',
+            startDate_c: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
+            endDate_c: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+            projectOwner_c: projectData.projectOwner || null,
+            manager_c: projectData.manager || null,
+            progress_c: parseInt(projectData.progress) || 0,
+            phase_c: projectData.phase || 'Initiation',
             createdAt_c: new Date().toISOString(),
             updatedAt_c: new Date().toISOString()
           }
@@ -159,7 +196,15 @@ class ProjectService {
             ...project,
             title: project.title_c || project.Name || '',
             description: project.description_c || '',
-            status: project.status_c || 'not-started',
+            status: project.status_c || 'active',
+            priority: project.priority_c || 'Medium',
+            startDate: project.startDate_c || '',
+            endDate: project.endDate_c || '',
+            projectOwner: project.projectOwner_c?.Name || '',
+            manager: project.manager_c?.Name || '',
+            progress: project.progress_c || 0,
+            phase: project.phase_c || 'Initiation',
+            tags: project.Tags || '',
             createdAt: project.createdAt_c || project.CreatedOn,
             updatedAt: project.updatedAt_c || project.ModifiedOn
           };
@@ -175,7 +220,7 @@ class ProjectService {
     }
   }
 
-  async update(id, projectData) {
+async update(id, projectData) {
     try {
       const params = {
         records: [
@@ -185,7 +230,14 @@ class ProjectService {
             Tags: projectData.tags || '',
             title_c: projectData.title || '',
             description_c: projectData.description || '',
-            status_c: projectData.status || 'not-started',
+            status_c: projectData.status || 'active',
+            priority_c: projectData.priority || 'Medium',
+            startDate_c: projectData.startDate ? new Date(projectData.startDate).toISOString() : null,
+            endDate_c: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+            projectOwner_c: projectData.projectOwner || null,
+            manager_c: projectData.manager || null,
+            progress_c: parseInt(projectData.progress) || 0,
+            phase_c: projectData.phase || 'Initiation',
             updatedAt_c: new Date().toISOString()
           }
         ]
@@ -222,7 +274,15 @@ class ProjectService {
             ...project,
             title: project.title_c || project.Name || '',
             description: project.description_c || '',
-            status: project.status_c || 'not-started',
+            status: project.status_c || 'active',
+            priority: project.priority_c || 'Medium',
+            startDate: project.startDate_c || '',
+            endDate: project.endDate_c || '',
+            projectOwner: project.projectOwner_c?.Name || '',
+            manager: project.manager_c?.Name || '',
+            progress: project.progress_c || 0,
+            phase: project.phase_c || 'Initiation',
+            tags: project.Tags || '',
             createdAt: project.createdAt_c || project.CreatedOn,
             updatedAt: project.updatedAt_c || project.ModifiedOn
           };
