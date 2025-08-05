@@ -21,10 +21,12 @@ const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: '',
     description: '',
-    projectId: ''
+    projectId: '',
+    status: 'to-do',
+    dueDate: ''
   });
 const [formErrors, setFormErrors] = useState({});
   const [selectedProjectFilter, setSelectedProjectFilter] = useState('');
@@ -83,7 +85,7 @@ const handleFormSubmit = async (e) => {
 try {
       const newTask = await taskService.create(formData);
       setTasks(prev => [...prev, newTask]);
-      setFormData({ title: '', description: '', projectId: '' });
+setFormData({ title: '', description: '', projectId: '', status: 'to-do', dueDate: '' });
       setFormErrors({});
       setShowForm(false);
     } catch (err) {
@@ -189,7 +191,7 @@ if (loading) return <Loading />;
 {showForm && (
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Task</h3>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+<form onSubmit={handleFormSubmit} className="space-y-4">
             <div>
               <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-1">
                 Project *
@@ -240,6 +242,36 @@ if (loading) return <Loading />;
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Enter task description (optional)"
                 rows={3}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                Status *
+              </label>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => handleInputChange('status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="to-do">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="blocked">Blocked</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date
+              </label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                className=""
               />
             </div>
 
@@ -410,6 +442,29 @@ const TaskCard = ({ task, projectName, onToggleComplete, onDelete, onCommentUpda
     }
   };
 
+const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-emerald-100 text-emerald-700';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-700';
+      case 'blocked':
+        return 'bg-red-100 text-red-700';
+      case 'to-do':
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const formatStatus = (status) => {
+    return status?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'To Do';
+  };
+
+  const isOverdue = (dueDate) => {
+    if (!dueDate) return false;
+    return new Date(dueDate) < new Date() && !task.completed;
+  };
+
   return (
     <Card className={`p-4 transition-all duration-200 ${task.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
       <div className="flex items-start gap-3">
@@ -434,7 +489,12 @@ const TaskCard = ({ task, projectName, onToggleComplete, onDelete, onCommentUpda
                 {projectName}
               </span>
             )}
-<button 
+            {task.status && (
+              <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>
+                {formatStatus(task.status)}
+              </span>
+            )}
+            <button 
               onClick={handleToggleExpanded}
               className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full flex items-center gap-1 hover:bg-gray-200 transition-colors"
             >
@@ -447,9 +507,17 @@ const TaskCard = ({ task, projectName, onToggleComplete, onDelete, onCommentUpda
               {task.description}
             </p>
           )}
-          <p className="text-xs text-gray-400 mt-2">
-            Created {format(new Date(task.createdAt), 'MMM d, yyyy')}
-          </p>
+          <div className="flex items-center gap-4 mt-2">
+            <p className="text-xs text-gray-400">
+              Created {format(new Date(task.createdAt), 'MMM d, yyyy')}
+            </p>
+            {task.dueDate && (
+              <p className={`text-xs ${isOverdue(task.dueDate) ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                Due {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                {isOverdue(task.dueDate) && ' (Overdue)'}
+              </p>
+            )}
+          </div>
 
           {/* Comments Section */}
           {expanded && (

@@ -24,7 +24,9 @@ fields: [
           { field: { Name: "projectId_c" } },
           { field: { Name: "completed_c" } },
           { field: { Name: "createdAt_c" } },
-          { field: { Name: "commentCount_c" } }
+          { field: { Name: "commentCount_c" } },
+          { field: { Name: "status_c" } },
+          { field: { Name: "dueDate_c" } }
         ],
         pagingInfo: {
           limit: 100,
@@ -58,13 +60,15 @@ fields: [
 
       // Map database field names to UI field names for backward compatibility
       return response.data.map(task => ({
-        ...task,
+...task,
         title: task.title_c || task.Name || '',
         description: task.description_c || '',
         projectId: task.projectId_c?.Id || task.projectId_c,
-completed: task.completed_c || false,
+        completed: task.completed_c || false,
         createdAt: task.createdAt_c || task.CreatedOn,
-        commentCount: task.commentCount_c || 0
+        commentCount: task.commentCount_c || 0,
+        status: task.status_c || 'to-do',
+        dueDate: task.dueDate_c || null
       }));
     } catch (error) {
       if (error?.response?.data?.message) {
@@ -89,7 +93,9 @@ const params = {
           { field: { Name: "projectId_c" } },
           { field: { Name: "completed_c" } },
           { field: { Name: "createdAt_c" } },
-          { field: { Name: "commentCount_c" } }
+          { field: { Name: "commentCount_c" } },
+          { field: { Name: "status_c" } },
+          { field: { Name: "dueDate_c" } }
         ]
       };
 
@@ -101,14 +107,16 @@ const params = {
 
       // Map database field names to UI field names for backward compatibility
       const task = response.data;
-      return {
+return {
         ...task,
         title: task.title_c || task.Name || '',
         description: task.description_c || '',
         projectId: task.projectId_c?.Id || task.projectId_c,
-completed: task.completed_c || false,
+        completed: task.completed_c || false,
         createdAt: task.createdAt_c || task.CreatedOn,
-        commentCount: task.commentCount_c || 0
+        commentCount: task.commentCount_c || 0,
+        status: task.status_c || 'to-do',
+        dueDate: task.dueDate_c || null
       };
     } catch (error) {
       if (error?.response?.data?.message) {
@@ -124,7 +132,7 @@ completed: task.completed_c || false,
     try {
       // Only include Updateable fields in create operation
       const params = {
-        records: [
+records: [
           {
             Name: taskData.title || '',
             Tags: taskData.tags || '',
@@ -132,7 +140,9 @@ completed: task.completed_c || false,
             description_c: taskData.description || '',
             projectId_c: parseInt(taskData.projectId), // Send as integer ID for lookup field
             completed_c: false,
-            createdAt_c: new Date().toISOString()
+            createdAt_c: new Date().toISOString(),
+            status_c: taskData.status || 'to-do',
+            dueDate_c: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null
           }
         ]
       };
@@ -164,13 +174,15 @@ completed: task.completed_c || false,
         if (successfulRecord) {
           const task = successfulRecord.data;
           toast.success('Task created successfully!');
-          return {
+return {
             ...task,
             title: task.title_c || task.Name || '',
             description: task.description_c || '',
             projectId: task.projectId_c?.Id || task.projectId_c,
             completed: task.completed_c || false,
-            createdAt: task.createdAt_c || task.CreatedOn
+            createdAt: task.createdAt_c || task.CreatedOn,
+            status: task.status_c || 'to-do',
+            dueDate: task.dueDate_c || null
           };
         }
       }
@@ -190,7 +202,7 @@ completed: task.completed_c || false,
         Id: parseInt(id)
       };
 
-      // Only include fields that are being updated
+// Only include fields that are being updated
       if (taskData.title !== undefined) {
         updateData.Name = taskData.title;
         updateData.title_c = taskData.title;
@@ -203,6 +215,12 @@ completed: task.completed_c || false,
       }
       if (taskData.completed !== undefined) {
         updateData.completed_c = taskData.completed;
+      }
+      if (taskData.status !== undefined) {
+        updateData.status_c = taskData.status;
+      }
+      if (taskData.dueDate !== undefined) {
+        updateData.dueDate_c = taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null;
       }
 
       const params = {
@@ -237,12 +255,14 @@ completed: task.completed_c || false,
           const task = successfulRecord.data;
           toast.success('Task updated successfully!');
           return {
-            ...task,
+...task,
             title: task.title_c || task.Name || '',
             description: task.description_c || '',
             projectId: task.projectId_c?.Id || task.projectId_c,
             completed: task.completed_c || false,
-            createdAt: task.createdAt_c || task.CreatedOn
+            createdAt: task.createdAt_c || task.CreatedOn,
+            status: task.status_c || 'to-do',
+            dueDate: task.dueDate_c || null
           };
         }
       }
