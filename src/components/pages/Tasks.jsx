@@ -357,6 +357,11 @@ const getStatusColor = (status) => {
               <span className="px-2 py-1 text-xs bg-primary-100 text-primary-700 rounded-full">
                 {projectName}
               </span>
+)}
+            {task.category && (
+              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+                {task.category}
+              </span>
             )}
             {task.status && (
               <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(task.status)}`}>

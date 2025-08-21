@@ -13,32 +13,35 @@ const TaskModal = ({
   task = null, 
   title = "Create New Task" 
 }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: '',
     description: '',
     projectId: '',
     status: 'to-do',
-    dueDate: ''
+    dueDate: '',
+    category: 'General'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     if (task) {
-      setFormData({
+setFormData({
         title: task.title || '',
         description: task.description || '',
         projectId: task.projectId || '',
         status: task.status || 'to-do',
-        dueDate: task.dueDate || ''
+        dueDate: task.dueDate || '',
+        category: task.category || 'General'
       });
     } else {
-      setFormData({
+setFormData({
         title: '',
         description: '',
         projectId: '',
         status: 'to-do',
-        dueDate: ''
+        dueDate: '',
+        category: 'General'
       });
     }
     setFormErrors({});
@@ -136,7 +139,28 @@ const TaskModal = ({
             onChange={(e) => handleInputChange("description", e.target.value)}
             rows={3}
             disabled={isSubmitting}
-          />
+/>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Category
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => handleInputChange("category", e.target.value)}
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="General">General</option>
+              <option value="Development">Development</option>
+              <option value="Design">Design</option>
+              <option value="Testing">Testing</option>
+              <option value="Documentation">Documentation</option>
+              <option value="Planning">Planning</option>
+              <option value="Bug Fix">Bug Fix</option>
+              <option value="Feature">Feature</option>
+            </select>
+          </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
